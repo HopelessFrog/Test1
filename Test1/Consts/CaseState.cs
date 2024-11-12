@@ -1,6 +1,10 @@
-﻿namespace Test1.Consts;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 
-public class CaseState
+namespace Test1.Consts;
+
+public enum CaseState 
 {
-    
+    None,
+    Pass,
+    Fail
 }

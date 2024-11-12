@@ -1,6 +1,6 @@
 ﻿namespace Test1.Consts;
 
-public enum IntMehtod
+public enum IntegrationMehtod
 {
     Simson,
     Trapezoid,
