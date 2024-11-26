@@ -2,7 +2,6 @@
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Test1.ViewModels;
 
 namespace Test1.Windows;
 
@@ -15,12 +14,12 @@ public partial class MainWindow : Window
     {
         InitializeComponent();
     }
-    private static readonly Regex _posReg = new Regex("[^1-9]+");
+    private static readonly Regex _posReg = new Regex("[^0-9]+");
     private static readonly Regex _posRegZ = new Regex("[^0-9]+");
     private static readonly Regex _posRegDouble = new Regex("[^0-9,]+");
     private static readonly Regex _reg = new Regex("[^0-9,-]+");
     private static readonly Regex _regSpace = new Regex("[^0-9 ,-]+");
-    
+
     private static bool IsTextAllowedPos(string text)
     {
         return !_posReg.IsMatch(text);
@@ -68,15 +67,29 @@ public partial class MainWindow : Window
 
     private void TextBox_LostFocus(object sender, RoutedEventArgs e)
     {
-        
+
         TextBox textBox = sender as TextBox;
 
         if (string.IsNullOrWhiteSpace(textBox.Text))
         {
+
             textBox.Text = "0";
             textBox.SelectionStart = 1;
 
         }
     }
-   
+
+    private void TextBox_TextInput(object sender, TextCompositionEventArgs e)
+    {
+
+        TextBox textBox = sender as TextBox;
+
+        if (string.IsNullOrWhiteSpace(textBox.Text))
+        {
+
+            textBox.Text = "0";
+            textBox.SelectionStart = 1;
+
+        }
+    }
 }

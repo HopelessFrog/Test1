@@ -1,6 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
+using System.Windows;
 using Test1.Consts;
 using Test1.Models;
 using Test1.Services;
@@ -10,10 +11,28 @@ namespace Test1.ViewModels;
 public partial class MainViewModel : ObservableValidator
 {
     private TestCaseFactory _factory = new();
-    
+
     private ImportExportService _importExport = new();
 
+    private Random _random = new Random();
+
     private int _lowerDegree = 15;
+
+    [ObservableProperty]
+    private int maxConcurrency = 3;
+
+    [ObservableProperty]
+    private ObservableCollection<Coef> coefs = new ObservableCollection<Coef>();
+
+    public MainViewModel()
+    {
+        coefs.CollectionChanged += Coefs_CollectionChanged;
+    }
+
+    private void Coefs_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(Coefs));
+    }
 
     public int LowerDegree
     {
@@ -34,11 +53,11 @@ public partial class MainViewModel : ObservableValidator
         {
             if (value > _lowerDegree)
                 SetProperty(ref _upperDegree, value);
-            if(value > 100)
+            if (value > 100)
                 SetProperty(ref _upperDegree, 100);
         }
     }
-    
+
     private bool selectAll;
     public bool SelectAll
     {
@@ -56,7 +75,7 @@ public partial class MainViewModel : ObservableValidator
     private void SelectOrDeselectAll()
     {
         TestCases.ForEach(c => c.Selected = SelectAll);
-        
+
         var qwe = TestCases;
     }
 
@@ -70,10 +89,26 @@ public partial class MainViewModel : ObservableValidator
     [ObservableProperty] private List<TestCase> _testCases = new List<TestCase>();
 
     [RelayCommand]
+    public async Task AddCoef()
+    {
+        Coefs.Add(new Coef() { Number = Coefs.Count + 1, Value = _random.NextDouble() });
+    }
+
+    [RelayCommand]
     private async Task GenerateTestCases()
     {
-        TestCases = await _factory.CreateTestCases(Step,LowerDegree, UpperDegree, LeftBoundary, RightBoundary,
-            IntegrationStep, IntegrationMehtod);
+        if (Coefs.Count == 0)
+        {
+            MessageBox.Show("Сначала сгенерируйте коэфиценты");
+            return;
+        }
+        if (Coefs.Count != UpperDegree)
+        {
+            MessageBox.Show("Число коэфицентов не совпадает с степенью полинома ");
+            return;
+        }
+        TestCases = await _factory.CreateTestCases(Step, LowerDegree, UpperDegree, LeftBoundary, RightBoundary,
+            IntegrationStep, IntegrationMehtod, Coefs.ToList());
     }
 
     [RelayCommand]
@@ -84,13 +119,32 @@ public partial class MainViewModel : ObservableValidator
             return;
         }
 
+        SemaphoreSlim semaphore = new SemaphoreSlim(maxConcurrency);
+
+        List<Task> runningTasks = new List<Task>();
+
         foreach (var testCase in TestCases)
         {
+            await semaphore.WaitAsync();
             var cancel = testCase.Cts.Token;
-            Task.Run(() => testCase.Run(waitingTime), cancel );
+            var task = Task.Run(async () =>
+            {
+                try
+                {
+                    testCase.Run(waitingTime);
+                }
+                finally
+                {
+                    semaphore.Release();
+                }
+            }, cancel);
+
+            runningTasks.Add(task);
         }
+
+        await Task.WhenAll(runningTasks);
     }
-    
+
     [RelayCommand]
     private async Task StopTests()
     {
@@ -101,8 +155,25 @@ public partial class MainViewModel : ObservableValidator
 
         foreach (var testCase in TestCases)
         {
-             testCase.Stop();
+            testCase.Stop();
         }
+    }
+
+    [RelayCommand]
+    private async Task GenerateCoefs()
+    {
+        var coefsss = new List<Coef>();
+        for (int i = 0; i < UpperDegree; i++)
+        {
+            coefsss.Add(new() { Number = i + 1, Value = _random.NextDouble() });
+        }
+
+        Coefs.Clear();
+        foreach (var coef in coefsss)
+        {
+            Coefs.Add(coef);
+        }
+
     }
 
     [RelayCommand]
@@ -113,6 +184,6 @@ public partial class MainViewModel : ObservableValidator
     [RelayCommand]
     private async Task Import()
     {
-        TestCases = await  _importExport.ImportTestCases();
+        TestCases = await _importExport.ImportTestCases();
     }
 }

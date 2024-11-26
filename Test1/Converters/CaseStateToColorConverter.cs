@@ -14,12 +14,12 @@ public class CaseStateToColorConverter : IValueConverter
             return caseState switch
             {
                 CaseState.None => Brushes.White,
-                CaseState.Pass => Brushes.Green,
+                CaseState.Pass => Brushes.LightGreen,
                 CaseState.Fail => Brushes.Red,
                 _ => Brushes.White
             };
         }
-        return Brushes.White; 
+        return Brushes.White;
     }
 
     public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
