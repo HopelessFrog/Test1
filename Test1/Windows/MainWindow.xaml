@@ -387,7 +387,7 @@
                                                             Command="{x:Static materialDesign:Flipper.FlipCommand}"
                                                             Margin="10"
                                                             Style="{StaticResource MaterialDesignFloatingActionMiniLightButton}"
-                                                            ToolTip="MaterialDesignFloatingActionMiniLightButton">
+                                                            >
                                                             <materialDesign:PackIcon
                                                                 Kind="QuestionMark" />
                                                         </Button>

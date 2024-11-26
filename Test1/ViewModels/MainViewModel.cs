@@ -102,9 +102,9 @@ public partial class MainViewModel : ObservableValidator
             MessageBox.Show("Сначала сгенерируйте коэфиценты");
             return;
         }
-        if (Coefs.Count != UpperDegree)
+        if (Coefs.Count < UpperDegree)
         {
-            MessageBox.Show("Число коэфицентов не совпадает с степенью полинома ");
+            MessageBox.Show("Коэфицентов не достаточно для данной степени полинома");
             return;
         }
         TestCases = await _factory.CreateTestCases(Step, LowerDegree, UpperDegree, LeftBoundary, RightBoundary,
